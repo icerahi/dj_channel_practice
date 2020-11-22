@@ -1,0 +1,7 @@
+venv
+static-root
+db.sqlite
+migrations
+pycache
+__pycache__
+.idea
