@@ -20,11 +20,13 @@ class Ip(models.Model):
         return str(self.address)
 
 
+#if modeel save it signal will send data to django channel
 @receiver(post_save,sender=Notice)
 def post_save_notice(sender,instance,created,**kwargs):
     if created:
+        #getting channel layer
         channel_layer=get_channel_layer()
-
+        #async function convert to sync and added the channel groupname and data
         async_to_sync(channel_layer.group_send)(
             'notice',{
                 'type':'sendNotice',

@@ -1,6 +1,7 @@
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.exceptions import DenyConnection
 from channels.generic.websocket import AsyncWebsocketConsumer
+
 from django.core.exceptions import ObjectDoesNotExist
 
 from apps.channel_practice.models import Ip
@@ -44,15 +45,20 @@ class TestConsumer(AsyncWebsocketConsumer):
     groupname = 'notice'
 
     async def connect(self):
+        #getting ip address of client
         self.ip=self.scope['client'][0]
-        await self.channel_layer.group_add(self.groupname, self.channel_name)
+
 
         try:
+            #check ip already available in database
            self.device= sync_to_async(Ip.objects.get)(address=self.ip)
         except ObjectDoesNotExist:
+            #if ip address not exist raise error
             raise DenyConnection("Invalid User")
 
+        await self.channel_layer.group_add(self.groupname, self.channel_name)
         await self.accept()
+        print(self.scope['client'][0])
 
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.groupname,self.channel_name)
@@ -69,6 +75,7 @@ class TestConsumer(AsyncWebsocketConsumer):
     async def rahi(self,event):
         await self.send(event['data'])
 
+    #comes from models post_save signal
     async def sendNotice(self,event):
         await self.send(text_data=event['notice'])
 
